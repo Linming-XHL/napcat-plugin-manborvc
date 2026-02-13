@@ -176,8 +176,6 @@ export async function handleMessage(ctx: NapCatPluginContext, event: OB11Message
                 return;
             }
 
-            await sendReply(ctx, event, '正在生成曼波语音，请稍候...');
-
             const result = await generateManboVoice(ctx, text, groupId);
 
             if (result.success && result.audioUrl) {
