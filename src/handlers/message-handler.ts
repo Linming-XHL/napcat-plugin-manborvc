@@ -168,8 +168,16 @@ export async function handleMessage(ctx: NapCatPluginContext, event: OB11Message
             if (!pluginState.isGroupEnabled(String(groupId))) return;
         }
 
-        if (rawMessage.startsWith('/曼波')) {
-            const text = rawMessage.slice(3).trim();
+        let commandText = rawMessage;
+        const selfId = pluginState.selfId;
+
+        if (selfId && rawMessage.includes(`@${selfId}`)) {
+            const atPattern = new RegExp(`@${selfId}\\s*`, 'g');
+            commandText = rawMessage.replace(atPattern, '').trim();
+        }
+
+        if (commandText.startsWith('/曼波')) {
+            const text = commandText.slice(3).trim();
             
             if (!text) {
                 await sendReply(ctx, event, '请输入要说的内容，例如：/曼波 你好');
