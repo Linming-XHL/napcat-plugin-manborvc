@@ -1,7 +1,7 @@
 {
   "name": "napcat-plugin-manborvc",
   "plugin": "曼波语音生成器",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "main": "index.mjs",
   "description": "NapCat 插件 - 曼波语音生成器，通过在线API生成曼波语音，使用指令/曼波 {要说的内容}",
