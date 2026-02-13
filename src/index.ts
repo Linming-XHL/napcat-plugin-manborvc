@@ -1,21 +1,9 @@
 /**
- * NapCat 插件模板 - 主入口
+ * NapCat 曼波语音生成器插件 - 主入口
  *
- * 导出 PluginModule 接口定义的生命周期函数，NapCat 加载插件时会调用这些函数。
+ * 功能：通过在线API生成曼波语音，使用指令"/曼波 {要说的内容}"
  *
- * 生命周期：
- *   plugin_init        → 插件加载时调用（必选）
- *   plugin_onmessage   → 收到事件时调用（需通过 post_type 判断事件类型）
- *   plugin_onevent     → 收到所有 OneBot 事件时调用
- *   plugin_cleanup     → 插件卸载/重载时调用
- *
- * 配置相关：
- *   plugin_config_ui          → 导出配置 Schema，用于 WebUI 自动生成配置面板
- *   plugin_get_config         → 自定义配置读取
- *   plugin_set_config         → 自定义配置保存
- *   plugin_on_config_change   → 配置变更回调
- *
- * @author Your Name
+ * @author LinmingXHL
  * @license MIT
  */
 

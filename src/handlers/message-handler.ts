@@ -3,7 +3,6 @@
  *
  * 处理接收到的 QQ 消息事件，包含：
  * - 命令解析与分发
- * - CD 冷却管理
  * - 消息发送工具函数
  *
  * 最佳实践：将不同类型的业务逻辑拆分到不同的 handler 文件中，
@@ -13,38 +12,7 @@
 import type { OB11Message, OB11PostSendMsg } from 'napcat-types/napcat-onebot';
 import type { NapCatPluginContext } from 'napcat-types/napcat-onebot/network/plugin/types';
 import { pluginState } from '../core/state';
-
-// ==================== CD 冷却管理 ====================
-
-/** CD 冷却记录 key: `${groupId}:${command}`, value: 过期时间戳 */
-const cooldownMap = new Map<string, number>();
-
-/**
- * 检查是否在 CD 中
- * @returns 剩余秒数，0 表示可用
- */
-function getCooldownRemaining(groupId: number | string, command: string): number {
-    const cdSeconds = pluginState.config.cooldownSeconds ?? 60;
-    if (cdSeconds <= 0) return 0;
-
-    const key = `${groupId}:${command}`;
-    const expireTime = cooldownMap.get(key);
-    if (!expireTime) return 0;
-
-    const remaining = Math.ceil((expireTime - Date.now()) / 1000);
-    if (remaining <= 0) {
-        cooldownMap.delete(key);
-        return 0;
-    }
-    return remaining;
-}
-
-/** 设置 CD 冷却 */
-function setCooldown(groupId: number | string, command: string): void {
-    const cdSeconds = pluginState.config.cooldownSeconds ?? 60;
-    if (cdSeconds <= 0) return;
-    cooldownMap.set(`${groupId}:${command}`, Date.now() + cdSeconds * 1000);
-}
+import { generateManboVoice } from '../services/manbo-service';
 
 // ==================== 消息发送工具 ====================
 
@@ -193,66 +161,32 @@ export async function handleMessage(ctx: NapCatPluginContext, event: OB11Message
         const rawMessage = event.raw_message || '';
         const messageType = event.message_type;
         const groupId = event.group_id;
-        const userId = event.user_id;
 
         pluginState.ctx.logger.debug(`收到消息: ${rawMessage} | 类型: ${messageType}`);
 
-        // 群消息：检查该群是否启用
         if (messageType === 'group' && groupId) {
             if (!pluginState.isGroupEnabled(String(groupId))) return;
         }
 
-        // 检查命令前缀
-        const prefix = pluginState.config.commandPrefix || '#cmd';
-        if (!rawMessage.startsWith(prefix)) return;
-
-        // 解析命令参数
-        const args = rawMessage.slice(prefix.length).trim().split(/\s+/);
-        const subCommand = args[0]?.toLowerCase() || '';
-
-        // TODO: 在这里实现你的命令处理逻辑
-        switch (subCommand) {
-            case 'help': {
-                const helpText = [
-                    `[= 插件帮助 =]`,
-                    `${prefix} help - 显示帮助信息`,
-                    `${prefix} ping - 测试连通性`,
-                    `${prefix} status - 查看运行状态`,
-                ].join('\n');
-                await sendReply(ctx, event, helpText);
-                break;
+        if (rawMessage.startsWith('/曼波')) {
+            const text = rawMessage.slice(3).trim();
+            
+            if (!text) {
+                await sendReply(ctx, event, '请输入要说的内容，例如：/曼波 你好');
+                return;
             }
 
-            case 'ping': {
-                // 群消息检查 CD
-                if (messageType === 'group' && groupId) {
-                    const remaining = getCooldownRemaining(groupId, 'ping');
-                    if (remaining > 0) {
-                        await sendReply(ctx, event, `请等待 ${remaining} 秒后再试`);
-                        return;
-                    }
-                }
+            await sendReply(ctx, event, '正在生成曼波语音，请稍候...');
 
-                await sendReply(ctx, event, 'pong!');
-                if (messageType === 'group' && groupId) setCooldown(groupId, 'ping');
+            const result = await generateManboVoice(ctx, text, groupId);
+
+            if (result.success && result.audioUrl) {
+                await sendReply(ctx, event, [
+                    { type: 'record', data: { file: result.audioUrl } }
+                ]);
                 pluginState.incrementProcessed();
-                break;
-            }
-
-            case 'status': {
-                const statusText = [
-                    `[= 插件状态 =]`,
-                    `运行时长: ${pluginState.getUptimeFormatted()}`,
-                    `今日处理: ${pluginState.stats.todayProcessed}`,
-                    `总计处理: ${pluginState.stats.processed}`,
-                ].join('\n');
-                await sendReply(ctx, event, statusText);
-                break;
-            }
-
-            default: {
-                // TODO: 在这里处理你的主要命令逻辑
-                break;
+            } else {
+                await sendReply(ctx, event, `生成失败: ${result.error || '未知错误'}`);
             }
         }
     } catch (error) {
