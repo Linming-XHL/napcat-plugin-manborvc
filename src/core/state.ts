@@ -33,22 +33,17 @@ function sanitizeConfig(raw: unknown): PluginConfig {
 
     if (typeof raw.enabled === 'boolean') out.enabled = raw.enabled;
     if (typeof raw.debug === 'boolean') out.debug = raw.debug;
-    if (typeof raw.commandPrefix === 'string') out.commandPrefix = raw.commandPrefix;
-    if (typeof raw.cooldownSeconds === 'number') out.cooldownSeconds = raw.cooldownSeconds;
+    if (typeof raw.manboRateLimit === 'number') out.manboRateLimit = raw.manboRateLimit;
 
-    // 群配置清洗
     if (isObject(raw.groupConfigs)) {
         for (const [groupId, groupConfig] of Object.entries(raw.groupConfigs)) {
             if (isObject(groupConfig)) {
                 const cfg: GroupConfig = {};
                 if (typeof groupConfig.enabled === 'boolean') cfg.enabled = groupConfig.enabled;
-                // TODO: 在这里添加你的群配置项清洗
                 out.groupConfigs[groupId] = cfg;
             }
         }
     }
-
-    // TODO: 在这里添加你的配置项清洗逻辑
 
     return out;
 }

@@ -10,12 +10,12 @@ import type { PluginConfig } from './types';
 export const DEFAULT_CONFIG: PluginConfig = {
     enabled: true,
     debug: false,
-    commandPrefix: '#cmd',
-    cooldownSeconds: 60,
-    groupConfigs: {},
-    manboApiUrl: '',
     manboRateLimit: -1,
+    groupConfigs: {},
 };
+
+/** 固定的曼波API地址 */
+export const MANBO_API_URL = 'https://api.milorapart.top/apis/mbAIsc';
 
 /**
  * 构建 WebUI 配置 Schema
@@ -40,7 +40,6 @@ export function buildConfigSchema(ctx: NapCatPluginContext): PluginConfigSchema 
         `),
         ctx.NapCatConfig.boolean('enabled', '启用插件', true, '是否启用此插件的功能'),
         ctx.NapCatConfig.boolean('debug', '调试模式', false, '启用后将输出详细的调试日志'),
-        ctx.NapCatConfig.text('manboApiUrl', '曼波API地址', '', '曼波语音生成API的完整URL地址'),
         ctx.NapCatConfig.number('manboRateLimit', '限频设置（每分钟）', -1, '每分钟请求次数限制，-1表示不限制，0表示禁用')
     );
 }

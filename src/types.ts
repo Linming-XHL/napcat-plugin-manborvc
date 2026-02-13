@@ -16,7 +16,6 @@
 export interface PluginConfig {
     enabled: boolean;
     debug: boolean;
-    manboApiUrl: string;
     manboRateLimit: number;
     groupConfigs: Record<string, GroupConfig>;
 }

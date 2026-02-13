@@ -1,5 +1,6 @@
 import type { NapCatPluginContext } from 'napcat-types/napcat-onebot/network/plugin/types';
 import { pluginState } from '../core/state';
+import { MANBO_API_URL } from '../config';
 
 interface ManboApiResponse {
     code: number;
@@ -65,12 +66,7 @@ const rateLimiter = new ManboRateLimiter();
 
 export async function generateManboVoice(ctx: NapCatPluginContext, text: string, groupId?: number): Promise<{ success: boolean; audioUrl?: string; error?: string }> {
     const config = pluginState.config;
-    const apiUrl = config.manboApiUrl?.trim();
     const rateLimit = config.manboRateLimit ?? -1;
-
-    if (!apiUrl) {
-        return { success: false, error: '曼波API地址未配置' };
-    }
 
     const rateLimitKey = groupId ? `group:${groupId}` : 'global';
 
@@ -79,7 +75,7 @@ export async function generateManboVoice(ctx: NapCatPluginContext, text: string,
     }
 
     try {
-        const url = new URL(apiUrl);
+        const url = new URL(MANBO_API_URL);
         url.searchParams.append('text', text);
 
         const response = await fetch(url.toString(), {
